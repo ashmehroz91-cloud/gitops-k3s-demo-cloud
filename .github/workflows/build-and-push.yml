@@ -2,60 +2,52 @@ name: Build and Push Images
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - backend/**
-      - frontend/**
-      - .github/workflows/build-and-push.yml
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/build-and-push.yml'
   workflow_dispatch:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    env:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up QEMU for multi-platform builds
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@v3
 
-      # Step 3: Set up Docker Buildx
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v3
 
-      # Step 4: Login to DockerHub
       - name: Login to DockerHub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 5: Build and push backend image
+      - name: Generate short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Build and push backend image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest
-            ${{ env.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest
-          cache-to: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/gitops-demo-backend:cache,mode=max
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ steps.vars.outputs.sha_short }}
 
-      # Step 6: Build and push frontend image
       - name: Build and push frontend image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest
-            ${{ env.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest
-          cache-to: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/gitops-demo-frontend:cache,mode=max
-
-  
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ steps.vars.outputs.sha_short }}
