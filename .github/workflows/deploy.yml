@@ -34,8 +34,8 @@ jobs:
 
       - name: Update images
         run: |
-          kubectl set image deployment/backend backend=${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ inputs.image_tag }}
-          kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ inputs.image_tag }}
+          kubectl set image deployment/backend backend=ashmehroz1/gitops-demo-backend:${{ inputs.image_tag }}
+          kubectl set image deployment/frontend frontend=ashmehroz1/gitops-demo-frontend:${{ inputs.image_tag }}
 
       - name: Wait for rollout
         run: |

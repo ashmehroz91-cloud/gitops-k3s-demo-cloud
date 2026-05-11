@@ -25,7 +25,6 @@ Set these repository secrets for the workflows:
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_REGION` (example: `us-east-1`)
 - `EKS_CLUSTER_NAME` (example: `gitops-eks-demo`)
-- `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
 
 ## Terraform: create the EKS cluster
@@ -49,10 +48,10 @@ Images are built and pushed by the GitHub Actions workflow on `main`:
 - `.github/workflows/build-and-push.yml`
 
 Tags pushed:
-- `DOCKERHUB_USERNAME/gitops-demo-backend:latest`
-- `DOCKERHUB_USERNAME/gitops-demo-frontend:latest`
-- `DOCKERHUB_USERNAME/gitops-demo-backend:<git-sha>`
-- `DOCKERHUB_USERNAME/gitops-demo-frontend:<git-sha>`
+- `ashmehroz1/gitops-demo-backend:latest`
+- `ashmehroz1/gitops-demo-frontend:latest`
+- `ashmehroz1/gitops-demo-backend:<git-sha>`
+- `ashmehroz1/gitops-demo-frontend:<git-sha>`
 
 ## Deploy to EKS (GitHub Actions)
 

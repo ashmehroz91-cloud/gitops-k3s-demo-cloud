@@ -23,7 +23,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ashmehroz1
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # =========================
@@ -36,8 +36,8 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ github.sha }}
+            ashmehroz1/gitops-demo-backend:latest
+            ashmehroz1/gitops-demo-backend:${{ github.sha }}
 
       # =========================
       # FRONTEND BUILD + PUSH
@@ -49,5 +49,5 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ github.sha }}
+            ashmehroz1/gitops-demo-frontend:latest
+            ashmehroz1/gitops-demo-frontend:${{ github.sha }}
