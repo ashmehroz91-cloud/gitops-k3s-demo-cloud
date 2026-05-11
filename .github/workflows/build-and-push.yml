@@ -2,35 +2,53 @@ name: Build and Push Images
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Docker Buildx (fixes your error)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. Login to DockerHub
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # =========================
+      # BACKEND IMAGE BUILD
+      # =========================
       - name: Build backend image
-        working-directory: ./backend
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest .
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest ./backend
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest \
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ github.sha }}
+
       - name: Push backend image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-backend:${{ github.sha }}
 
+      # =========================
+      # FRONTEND IMAGE BUILD
+      # =========================
       - name: Build frontend image
-        working-directory: ./frontend
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest .
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest ./frontend
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest \
+            ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:${{ github.sha }}
+
       - name: Push frontend image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gitops-demo-frontend:latest
