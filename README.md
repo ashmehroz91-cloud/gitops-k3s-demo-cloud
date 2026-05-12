@@ -24,20 +24,15 @@ Required GitHub secrets
 -----------------------
 
 Store these in GitHub -> Settings -> Secrets -> Actions:
+if you have this project into your own repo otherwise you are use ashmehroz1 dockerhub public images
 
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION` (for example `us-east-1`)
-- `EKS_CLUSTER_NAME` (for example `gitops-eks-demo`)
 - `DOCKERHUB_TOKEN`
 - `DOCKERHUB_USERNAME` 
-
-If workflows need to commit manifests back, ensure `GITHUB_TOKEN` has `contents: write`.
 
 Quick start (stepwise)
 ----------------------
 
-1) Configure AWS credentials locally: Set AWs_ACCESS_KEY_ID AND AWS_SECRET_ACCESS_KEY
+1) Configure AWS credentials locally: Set AWs_ACCESS_KEY_ID AND AWS_SECRET_ACCESS_KEY : Get from AWS after creating IAM USER.
 
 ```bash
 aws configure
@@ -45,6 +40,7 @@ aws configure
 After configuration check it with command 
 
 aws configure list 
+
 ```
 
 2) Provision EKS with Terraform:
