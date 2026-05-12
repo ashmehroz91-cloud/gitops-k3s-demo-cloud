@@ -1,9 +1,16 @@
 name: Build and Push Images
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/build-and-push.yml'
   workflow_dispatch:
 
 jobs:
