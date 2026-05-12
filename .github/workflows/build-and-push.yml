@@ -10,6 +10,8 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - 'terraform/**'
+      - 'k8s/**'
       - '.github/workflows/build-and-push.yml'
   workflow_dispatch:
 
