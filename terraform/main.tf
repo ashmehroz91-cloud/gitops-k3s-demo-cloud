@@ -181,3 +181,43 @@ resource "aws_eks_node_group" "this" {
 
   tags = local.base_tags
 }
+
+# Allow SSH (port 22)
+resource "aws_security_group_rule" "allow_ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}
+
+# Allow HTTP (port 80)
+resource "aws_security_group_rule" "allow_http" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}
+
+# Allow HTTPS (port 443)
+resource "aws_security_group_rule" "allow_https" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}
+
+# Allow NodePort services (port 30080)
+resource "aws_security_group_rule" "allow_nodeport" {
+  type              = "ingress"
+  from_port         = 30080
+  to_port           = 30080
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+}

@@ -30,7 +30,7 @@ Store these in GitHub -> Settings -> Secrets -> Actions:
 - `AWS_REGION` (for example `us-east-1`)
 - `EKS_CLUSTER_NAME` (for example `gitops-eks-demo`)
 - `DOCKERHUB_TOKEN`
-- `DOCKERHUB_USERNAME` (optional)
+- `DOCKERHUB_USERNAME` 
 
 If workflows need to commit manifests back, ensure `GITHUB_TOKEN` has `contents: write`.
 
@@ -48,6 +48,7 @@ aws configure
 ```bash
 cd terraform
 terraform init
+terraform plan 
 terraform apply
 ```
 
@@ -88,8 +89,8 @@ kubectl get svc -n default
 8) Open the Argo CD UI and get the initial password:
 
 ```bash
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-# open https://localhost:8080
+kubectl port-forward svc/argocd-server -n argocd 8081:443
+# open https://localhost:8081
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 echo
 ```
@@ -101,13 +102,14 @@ The frontend is exposed by `k8s/frontend-service.yaml` as `NodePort:30080`. Find
 
 For production use, replace NodePort with a LoadBalancer or Ingress.
 
-Update image names
+Update ashmehroz1 image name with your own image names from below files 
 ------------------
 
 Edit the image fields in:
 
 - `k8s/backend-deployment.yaml`
 - `k8s/frontend-deployment.yaml`
+- `.github/workflows/build-and-push.yml`
 
 Destroy
 -------
