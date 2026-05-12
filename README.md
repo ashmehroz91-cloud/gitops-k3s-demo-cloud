@@ -37,10 +37,14 @@ If workflows need to commit manifests back, ensure `GITHUB_TOKEN` has `contents:
 Quick start (stepwise)
 ----------------------
 
-1) Configure AWS credentials locally:
+1) Configure AWS credentials locally: Set AWs_ACCESS_KEY_ID AND AWS_SECRET_ACCESS_KEY
 
 ```bash
 aws configure
+
+After configuration check it with command 
+
+aws configure list 
 ```
 
 2) Provision EKS with Terraform:
@@ -59,8 +63,6 @@ export AWS_REGION=us-east-1
 export EKS_CLUSTER_NAME=gitops-eks-demo
 aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
 ```
-
-If you get `argument --region: expected one argument`, it means `AWS_REGION` was empty. Use a value like `us-east-1`.
 
 4) Install Argo CD (if not present):
 
@@ -89,8 +91,14 @@ kubectl get svc -n default
 8) Open the Argo CD UI and get the initial password:
 
 ```bash
-kubectl port-forward svc/argocd-server -n argocd 8081:443
-# open https://localhost:8081
+
+PORT=8081
+while ss -ltn "sport = :$PORT" | grep -q LISTEN; do
+	PORT=$((PORT + 1))
+done
+kubectl port-forward svc/argocd-server -n argocd "$PORT:443"
+# open https://localhost:$PORT
+
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 echo
 ```
@@ -102,14 +110,18 @@ The frontend is exposed by `k8s/frontend-service.yaml` as `NodePort:30080`. Find
 
 For production use, replace NodePort with a LoadBalancer or Ingress.
 
-Update ashmehroz1 image name with your own image names from below files 
+Public image setup
 ------------------
 
-Edit the image fields in:
+This repo already points to public Docker Hub images under the `ashmehroz1` account, so a collaborator who clones the repo does not need to build or push images just to deploy the app.
+
+For the default setup, keep the image fields in:
 
 - `k8s/backend-deployment.yaml`
 - `k8s/frontend-deployment.yaml`
 - `.github/workflows/build-and-push.yml`
+
+If you want to use your own images later, replace the `image:` values in the Kubernetes manifests and the image tags in the workflow.
 
 Destroy
 -------
@@ -119,7 +131,3 @@ cd terraform
 terraform destroy
 ```
 
-Cost note
----------
-
-The Terraform uses a small node group to minimize cost; EKS control plane is charged separately. Delete the cluster when not in use.
