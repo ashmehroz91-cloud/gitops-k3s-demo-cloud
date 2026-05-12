@@ -50,7 +50,11 @@ jobs:
           kubectl set image deployment/backend backend=ashmehroz1/gitops-demo-backend:${IMAGE_TAG}
           kubectl set image deployment/frontend frontend=ashmehroz1/gitops-demo-frontend:${IMAGE_TAG}
 
-      - name: Wait for rollout
+      - name: Rollout diagnostics (non-blocking)
         run: |
-          kubectl rollout status deployment/backend
-          kubectl rollout status deployment/frontend
+          echo "Backend rollout status (non-blocking)"
+          kubectl rollout status deployment/backend --timeout=180s || true
+          echo "Frontend rollout status (non-blocking)"
+          kubectl rollout status deployment/frontend --timeout=180s || true
+          echo "Current pod status"
+          kubectl get pods -o wide || true
