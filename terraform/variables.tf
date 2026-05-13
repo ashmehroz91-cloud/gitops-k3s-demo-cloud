@@ -22,26 +22,56 @@ variable "public_subnet_cidrs" {
   default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
-variable "node_instance_type" {
-  description = "EC2 instance type for the managed node group."
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for the private subnets (2 AZs)."
+  type        = list(string)
+  default     = ["10.0.11.0/24", "10.0.12.0/24"]
+}
+
+variable "public_node_instance_type" {
+  description = "EC2 instance type for the public managed node group."
   type        = string
   default     = "t3.small"
 }
 
-variable "node_desired_size" {
-  description = "Desired node count."
+variable "public_node_desired_size" {
+  description = "Desired node count for the public node group."
+  type        = number
+  default     = 1
+}
+
+variable "public_node_min_size" {
+  description = "Minimum node count for the public node group."
+  type        = number
+  default     = 1
+}
+
+variable "public_node_max_size" {
+  description = "Maximum node count for the public node group."
   type        = number
   default     = 2
 }
 
-variable "node_min_size" {
-  description = "Minimum node count."
-  type        = number
-  default     = 2
+variable "private_node_instance_type" {
+  description = "EC2 instance type for the private managed node group."
+  type        = string
+  default     = "t3.small"
 }
 
-variable "node_max_size" {
-  description = "Maximum node count."
+variable "private_node_desired_size" {
+  description = "Desired node count for the private node group."
+  type        = number
+  default     = 1
+}
+
+variable "private_node_min_size" {
+  description = "Minimum node count for the private node group."
+  type        = number
+  default     = 1
+}
+
+variable "private_node_max_size" {
+  description = "Maximum node count for the private node group."
   type        = number
   default     = 2
 }

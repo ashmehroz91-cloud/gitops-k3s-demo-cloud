@@ -32,27 +32,32 @@ if you have this project into your own repo otherwise you are use ashmehroz1 doc
 Quick start (stepwise)
 ----------------------
 
-1) Configure AWS credentials locally: Set AWs_ACCESS_KEY_ID AND AWS_SECRET_ACCESS_KEY : Get from AWS after creating IAM USER.
+1) Configure AWS credentials locally: Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Get these from AWS after creating an IAM user.
 
 ```bash
 aws configure
-
-After configuration check it with command 
-
-aws configure list 
-
 ```
 
-2) Provision EKS with Terraform:
+After configuration, verify it works:
+
+```bash
+aws configure list
+```
+
+2) Provision EKS infrastructure with Terraform:
+
+Run from the `terraform/` directory:
 
 ```bash
 cd terraform
 terraform init
-terraform plan 
+terraform plan
 terraform apply
 ```
 
-3) Configure kubeconfig for the new cluster. Set `AWS_REGION` before running the command:
+This creates: VPC, subnets (public/private), EKS cluster, node groups, and IAM roles for the ALB controller.
+
+3) Configure kubeconfig for the new cluster:
 
 ```bash
 export AWS_REGION=us-east-1
@@ -60,22 +65,61 @@ export EKS_CLUSTER_NAME=gitops-eks-demo
 aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
 ```
 
-4) Install Argo CD (if not present):
+Verify kubeconfig works:
+
+```bash
+kubectl cluster-info
+```
+
+4) Install AWS Load Balancer Controller:
+
+Run from the repository root:
+
+```bash
+chmod +x scripts/install-alb-controller.sh
+./scripts/install-alb-controller.sh
+```
+
+This script:
+- Adds the AWS Helm repository
+- Creates a Kubernetes ServiceAccount with IAM role annotation (IRSA)
+- Installs the ALB controller chart
+- Verifies the installation
+
+5) Install Argo CD (if not present):
+
+Do this only after the AWS Load Balancer Controller is installed and healthy.
 
 ```bash
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-5) Apply the Argo CD Application from this repo:
+If you hit a webhook error, stop here and verify the controller first:
+
+```bash
+kubectl get pods -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
+kubectl get endpoints -n kube-system aws-load-balancer-webhook-service
+```
+
+Recommended order:
+
+1. Install the AWS Load Balancer Controller.
+2. Confirm it is running with the command above.
+3. Install Argo CD.
+4. Apply the Argo CD application.
+
+6) Apply the Argo CD Application:
+
+Run from the repository root:
 
 ```bash
 kubectl apply -f argocd/applications/gitops-demo.yaml
 ```
 
-6) Image builds are automatic via GitHub Actions on `main` (`.github/workflows/build-and-push.yml`).
+7) Image builds are automatic via GitHub Actions on `main` (`.github/workflows/build-and-push.yml`).
 
-7) Verify cluster and Argo CD:
+8) Verify cluster and Argo CD:
 
 ```bash
 kubectl get pods -n argocd
@@ -84,17 +128,21 @@ kubectl get pods -n default
 kubectl get svc -n default
 ```
 
-8) Open the Argo CD UI and get the initial password:
+9) Open the Argo CD UI and get the initial password:
 
 ```bash
-
 PORT=8081
 while ss -ltn "sport = :$PORT" | grep -q LISTEN; do
 	PORT=$((PORT + 1))
 done
 kubectl port-forward svc/argocd-server -n argocd "$PORT:443"
-# open https://localhost:$PORT
+```
 
+Then open `https://localhost:$PORT` in a browser.
+
+Get the initial admin password:
+
+```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 echo
 ```
@@ -102,11 +150,63 @@ echo
 Accessing the app
 -----------------
 
-The frontend is exposed by `k8s/frontend-service.yaml` as `NodePort:30080`. Find a node IP with `kubectl get nodes -o wide` and open `http://<node-ip>:30080`.
 
-For production use, replace NodePort with a LoadBalancer or Ingress.
+The frontend is exposed through an Ingress (`k8s/frontend-ingress.yaml`) and will be reachable via the ALB DNS name once the AWS Load Balancer Controller provisions an ALB.
 
-Public image setup
+Get the ingress hostname (run on your workstation with kubeconfig set):
+
+```bash
+kubectl get ingress frontend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+echo
+```
+
+Then open `http://<alb-hostname>` in a browser.
+
+The backend is internal (`ClusterIP`) and is not accessible from the internet.
+
+Architecture summary
+--------------------
+
+- Frontend service: `ClusterIP`, exposed by ALB Ingress
+- Backend service: `ClusterIP`, internal only
+- Public node group: frontend workload
+- Private node group: backend workload (tainted/isolated)
+
+Validation commands
+-------------------
+
+```bash
+# Confirm services are internal
+kubectl get svc frontend backend
+
+# Confirm ingress is provisioned
+kubectl get ingress frontend
+
+# Confirm workload placement labels
+kubectl get nodes --show-labels | grep workload
+
+# Confirm pod scheduling
+kubectl get pods -o wide
+```
+
+Which directory to run commands from
+-----------------------------------
+
+- **Terraform commands**: run from the `terraform/` directory (e.g., `cd terraform && terraform apply`).
+- **kubectl and Helm commands**: run from your local workstation where `kubectl` and `helm` are installed, with kubeconfig configured to point to the cluster.
+- **Repository scripts** (e.g., `scripts/install-alb-controller.sh`): run from the repository root.
+- **Kubernetes manifests** (e.g., applying Argo CD or k8s files): can be applied from any directory with correct kubeconfig, using relative or absolute paths to the YAML files.
+
+Installation Summary
+--------------------
+
+| Step | Directory | What it does |
+|------|-----------|--------------|
+| 1-2 | `terraform/` | Create EKS infrastructure |
+| 3 | Workstation | Configure kubectl access |
+| 4 | Repo root | Install ALB controller |
+| 5-6 | Workstation | Install Argo CD and app |
+| 7-9 | Workstation | Verify and access UI |
 ------------------
 
 This repo already points to public Docker Hub images under the `ashmehroz1` account, so a collaborator who clones the repo does not need to build or push images just to deploy the app.
