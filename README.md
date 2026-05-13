@@ -189,26 +189,6 @@ kubectl get nodes --show-labels | grep workload
 kubectl get pods -o wide
 ```
 
-Which directory to run commands from
------------------------------------
-
-- **Terraform commands**: run from the `terraform/` directory (e.g., `cd terraform && terraform apply`).
-- **kubectl and Helm commands**: run from your local workstation where `kubectl` and `helm` are installed, with kubeconfig configured to point to the cluster.
-- **Repository scripts** (e.g., `scripts/install-alb-controller.sh`): run from the repository root.
-- **Kubernetes manifests** (e.g., applying Argo CD or k8s files): can be applied from any directory with correct kubeconfig, using relative or absolute paths to the YAML files.
-
-Installation Summary
---------------------
-
-| Step | Directory | What it does |
-|------|-----------|--------------|
-| 1-2 | `terraform/` | Create EKS infrastructure |
-| 3 | Workstation | Configure kubectl access |
-| 4 | Repo root | Install ALB controller |
-| 5-6 | Workstation | Install Argo CD and app |
-| 7-9 | Workstation | Verify and access UI |
-------------------
-
 This repo already points to public Docker Hub images under the `ashmehroz1` account, so a collaborator who clones the repo does not need to build or push images just to deploy the app.
 
 For the default setup, keep the image fields in:
