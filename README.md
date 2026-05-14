@@ -23,8 +23,9 @@ Prerequisites
 Required GitHub secrets
 -----------------------
 
-Store these in GitHub -> Settings -> Secrets -> Actions:
-if you have this project into your own repo otherwise you are use ashmehroz1 dockerhub public images
+Store these in GitHub -> Settings -> Secrets -> Actions.
+If you fork this repo and want to build/push your own images, set these secrets.
+If you keep the default public `ashmehroz1` images, you can skip them.
 
 - `DOCKERHUB_TOKEN`
 - `DOCKERHUB_USERNAME` 
@@ -117,6 +118,8 @@ Run from the repository root:
 kubectl apply -f argocd/applications/gitops-demo.yaml
 ```
 
+If you fork this repo, update the `repoURL` in `argocd/applications/gitops-demo.yaml` to your GitHub URL before applying it.
+
 7) Image builds are automatic via GitHub Actions on `main` (`.github/workflows/build-and-push.yml`).
 
 8) Verify cluster and Argo CD:
@@ -162,6 +165,21 @@ echo
 
 Then open `http://<alb-hostname>` in a browser.
 
+If the hostname is empty, wait a few minutes and watch the ingress:
+
+```bash
+kubectl get ingress frontend -n default -w
+```
+
+Quick test (no browser required):
+
+```bash
+ALB_HOST=$(kubectl get ingress frontend -n default -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+curl -I "http://${ALB_HOST}"
+```
+
+
+
 The backend is internal (`ClusterIP`) and is not accessible from the internet.
 
 Architecture summary
@@ -188,6 +206,25 @@ kubectl get nodes --show-labels | grep workload
 # Confirm pod scheduling
 kubectl get pods -o wide
 ```
+
+GitOps update flow (push changes)
+---------------------------------
+
+When you change any file under `k8s/`, push to GitHub and Argo CD will sync automatically:
+
+```bash
+git add k8s/
+git commit -m "Update app manifests"
+git push origin main
+```
+
+Then check sync status:
+
+```bash
+kubectl get applications -n argocd
+```
+
+If auto-sync is disabled or the app is out of sync, you can trigger a sync in the Argo CD UI.
 
 This repo already points to public Docker Hub images under the `ashmehroz1` account, so a collaborator who clones the repo does not need to build or push images just to deploy the app.
 
